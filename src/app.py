@@ -25,6 +25,7 @@ sys.path.insert(0, PROJECT_DIR)
 # pylint: disable=wrong-import-position
 
 import scrapping
+import analysis
 
 # pylint: enable=wrong-import-position
 
@@ -103,8 +104,14 @@ def main(args):
         scrapper.get_symbols()
 
         if len(app.symbols) > 0:
+            companies = {}
             for symbol in app.symbols:
-                scrapper.get_fundamental_analysis(symbol)
+                companies[symbol] =\
+                    scrapper.get_fundamental_analysis(symbol)
+            print(companies)
+            analysis_companies = analysis.Analyze(companies)
+            analysis_companies.calculate()
+            print(analysis_companies.calculations)
 
     logger.info(args)
 

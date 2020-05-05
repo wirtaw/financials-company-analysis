@@ -3,7 +3,6 @@
 
 """Module for data scrapping."""
 
-import os.path
 from os import path
 import json
 import re
@@ -98,8 +97,7 @@ class Scrapper:
 
         if number > 2:
             return res
-        else:
-            return None
+        return None
 
     @staticmethod
     def map_row_financial(columns):
@@ -113,8 +111,7 @@ class Scrapper:
                 number = number + 1
         if number > 2:
             return res
-        else:
-            return None
+        return None
 
     def parse_table(self, table):
         """Parse table"""
@@ -137,7 +134,7 @@ class Scrapper:
 
         soup = BeautifulSoup(html, features="html.parser")
         trades_table = soup.find_all(id='usa_shares')
-        trades_table_class = soup\
+        trades_table_class = soup \
             .find_all("table", class_=re.compile('trades'))
 
         if trades_table:
@@ -151,7 +148,13 @@ class Scrapper:
     def parse_table_by_criteria(self, table):
         """Parse financial table"""
         res = {}
-        criteria = ['market_cap', 'debt', 'assets', 'revenue', 'net_income']
+        criteria = ['market_cap',
+                    'debt', 'assets',
+                    'revenue',
+                    'net_income',
+                    'p_e', 'p_s', 'p_bv',
+                    'roe', 'roa', 'ev_ebitda',
+                    'debt_ebitda']
 
         rows = table[0].find_all('tr')
         if len(rows) > 1:
@@ -159,13 +162,14 @@ class Scrapper:
                 field = row.get('field')
                 class_name = row.get('class')
                 columns = row.find_all('td')
-                if field in criteria \
-                        and columns \
-                        and len(columns) > 1\
-                        or class_name == 'header_row':
+                if (field in criteria and columns and len(columns) > 1) \
+                        or (class_name and 'header_row' in class_name):
                     item = self.map_row_financial(columns)
                     if item is not None:
-                        res[field] = item
+                        if field:
+                            res[field] = item
+                        if class_name:
+                            res['header_row'] = item
 
         return res
 
@@ -174,7 +178,7 @@ class Scrapper:
         res = []
 
         soup = BeautifulSoup(html, features="html.parser")
-        financial_table = soup\
+        financial_table = soup \
             .find_all("table", class_=re.compile('financials'))
 
         if financial_table:
@@ -203,13 +207,15 @@ class Scrapper:
             self.list_symbols = bulk
 
     def get_fundamental_analysis(self, symbol):
+        """Get fundamental finance analysis data"""
+        res = []
         if self.list_symbols and symbol:
             query = ''
             print(f"symbol {symbol}")
             for item in self.list_symbols['data']:
                 if item['symbol'] and item['symbol'] == symbol \
                         and item['fundamental_analysis']:
-                    print(item)
+                    # print(item)
                     query_symbol = f"{item['symbol']}"
                     if item['symbol'].find('.') != -1:
                         symbols_list = item['symbol'].split('.')
@@ -220,6 +226,8 @@ class Scrapper:
                 for url in self.endpoints.items():
                     response_body = self.get_request(query, url[0])
                     if response_body != '':
-                        financials_info = \
+                        res = \
                             self.parse_body_financial(response_body)
-                        print(response_body)
+                        # print(res)
+
+        return res
