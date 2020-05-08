@@ -13,14 +13,13 @@ from bs4 import BeautifulSoup
 class Scrapper:
     """Scrapper module"""
 
-    def __init__(self, markets, filename):
+    def __init__(self, markets):
         self.endpoints = {
             "https://smart-lab.ru/": [
                 'q/usa/',
                 'q/shares/'
             ]
         }
-        self.filename = filename
         self.markets = markets
         self.list_symbols = []
 
@@ -58,11 +57,12 @@ class Scrapper:
             data = res.text
         return data
 
-    def read_filename(self):
+    @staticmethod
+    def read_filename(name):
         """Get file with symbols"""
         res = None
-        if path.isfile(self.filename):
-            with open(self.filename) as file_stream:
+        if path.isfile(name):
+            with open(name) as file_stream:
                 for json_obj in file_stream:
                     res = json.loads(json_obj)
 
@@ -186,9 +186,9 @@ class Scrapper:
 
         return res
 
-    def get_symbols(self):
+    def get_symbols(self, file_name):
         """Get stock symbols scrapping process"""
-        bulk = self.read_filename()
+        bulk = self.read_filename(file_name)
         if bulk is None:
             data_to_save = {'data': []}
             for url, values in self.endpoints.items():
@@ -200,34 +200,43 @@ class Scrapper:
                     data_to_save['data'] = data_to_save['data'] + stock_list
             self.list_symbols = data_to_save
             if self.json_validator(json.dumps(data_to_save)):
-                data_file = open(self.filename, "w")
+                data_file = open(file_name, "w")
                 data_file.write(json.dumps(data_to_save))
                 data_file.close()
         else:
             self.list_symbols = bulk
 
-    def get_fundamental_analysis(self, symbol):
+    def get_fundamental_analysis(self, symbol, file_name):
         """Get fundamental finance analysis data"""
         res = []
-        if self.list_symbols and symbol:
-            query = ''
-            print(f"symbol {symbol}")
-            for item in self.list_symbols['data']:
-                if item['symbol'] and item['symbol'] == symbol \
-                        and item['fundamental_analysis']:
-                    # print(item)
-                    query_symbol = f"{item['symbol']}"
-                    if item['symbol'].find('.') != -1:
-                        symbols_list = item['symbol'].split('.')
-                        query_symbol = symbols_list[1]
-
-                    query = query + f"/q/{query_symbol}/f/y/"
-            if query:
-                for url in self.endpoints.items():
-                    response_body = self.get_request(query, url[0])
-                    if response_body != '':
-                        res = \
-                            self.parse_body_financial(response_body)
-                        # print(res)
+        bulk = self.read_filename(file_name)
+        if bulk is None:
+            data_to_save = {'data': []}
+            if self.list_symbols and symbol:
+                query = ''
+                print(f"symbol {symbol}")
+                for item in self.list_symbols['data']:
+                    if item['symbol'] and item['symbol'] == symbol \
+                            and item['fundamental_analysis']:
+                        # print(item)
+                        query_symbol = f"{item['symbol']}"
+                        if item['symbol'].find('.') != -1:
+                            symbols_list = item['symbol'].split('.')
+                            query_symbol = symbols_list[1]
+                        query = query + f"/q/{query_symbol}/f/y/"
+                if query:
+                    for url in self.endpoints.items():
+                        response_body = self.get_request(query, url[0])
+                        if response_body != '':
+                            res = \
+                                self.parse_body_financial(response_body)
+                            data_to_save['data'] = res
+                            # print(res)
+            if self.json_validator(json.dumps(data_to_save)):
+                data_file = open(file_name, "w")
+                data_file.write(json.dumps(data_to_save))
+                data_file.close()
+        else:
+            res = bulk
 
         return res

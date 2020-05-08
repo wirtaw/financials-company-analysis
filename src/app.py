@@ -98,16 +98,18 @@ def main(args):
     app.print_message()
 
     if args and app.markets:
-        file_name = './../data/stocks.json'
+        file_path = './../'
 
-        scrapper = scrapping.Scrapper(app.markets, file_name)
-        scrapper.get_symbols()
+        scrapper = scrapping.Scrapper(app.markets)
+        scrapper.get_symbols(f"{file_path}data/stocks.json")
 
         if len(app.symbols) > 0:
             companies = {}
             for symbol in app.symbols:
+                file_name = f"{file_path}data/{symbol}_financials.json"
                 companies[symbol] =\
-                    scrapper.get_fundamental_analysis(symbol)
+                    scrapper.get_fundamental_analysis(symbol,
+                                                      file_name)
             print(companies)
             analysis_companies = analysis.Analyze(companies)
             analysis_companies.calculate()
