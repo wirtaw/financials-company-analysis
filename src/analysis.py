@@ -98,6 +98,85 @@ class Analyze:
                 'rsquared_adj': results.rsquared_adj,
                 'params': results.params}
 
+    @staticmethod
+    def get_points(title, values):
+        """Get points"""
+        scores = {}
+        coef = {}
+        if title == 'market_cap':
+            max_market_cap = 0
+            max_market_cap_title = ''
+            for item in values.items():
+                point = 0
+                if item[1]['regression_coef'] > 0:
+                    point += 0.5
+                scores[item[0]] = point
+                if item[1]['regression_coef'] > max_market_cap:
+                    max_market_cap = item[1]['regression_coef']
+                    max_market_cap_title = item[0]
+                coef[item[0]] = item[1]['regression_coef']
+            scores[max_market_cap_title] = scores[max_market_cap_title] + 0.5
+
+        if title == 'debt':
+            min_market_cap = 0
+            min_market_cap_title = ''
+            for item in values.items():
+                point = 0
+                if item[1]['regression_coef'] < 0:
+                    point += 0.5
+                scores[item[0]] = point
+                if item[1]['regression_coef'] < min_market_cap:
+                    min_market_cap = item[1]['regression_coef']
+                    min_market_cap_title = item[0]
+                coef[item[0]] = item[1]['regression_coef']
+            scores[min_market_cap_title] = scores[min_market_cap_title] + 0.5
+
+        if title == 'assets':
+            max_market_cap = 0
+            max_market_cap_title = ''
+            for item in values.items():
+                point = 0
+                if item[1]['regression_coef'] > 0:
+                    point += 0.5
+                scores[item[0]] = point
+                if item[1]['regression_coef'] > max_market_cap:
+                    max_market_cap = item[1]['regression_coef']
+                    max_market_cap_title = item[0]
+                coef[item[0]] = item[1]['regression_coef']
+            scores[max_market_cap_title] = scores[max_market_cap_title] + 0.5
+
+        if title == 'revenue':
+            max_market_cap = 0
+            max_market_cap_title = ''
+            for item in values.items():
+                point = 0
+                if item[1]['regression_coef'] > 0:
+                    point += 0.5
+                scores[item[0]] = point
+                if item[1]['regression_coef'] > max_market_cap:
+                    max_market_cap = item[1]['regression_coef']
+                    max_market_cap_title = item[0]
+                coef[item[0]] = item[1]['regression_coef']
+            scores[max_market_cap_title] = scores[max_market_cap_title] + 0.5
+
+        if title == 'net_income':
+            max_market_cap = 0
+            max_market_cap_title = ''
+            for item in values.items():
+                point = 0
+                if item[1]['regression_coef'] > 0:
+                    point += 0.5
+                scores[item[0]] = point
+                if item[1]['regression_coef'] > max_market_cap:
+                    max_market_cap = item[1]['regression_coef']
+                    max_market_cap_title = item[0]
+                coef[item[0]] = item[1]['regression_coef']
+            scores[max_market_cap_title] = scores[max_market_cap_title] + 0.5
+        print(coef)
+        print(scores)
+
+        return scores
+
     def calculate(self):
         """Make all calculations"""
         self.calculations = {'market_cap_regression': {},
@@ -121,6 +200,17 @@ class Analyze:
                              'ev_ebitda_regression_statsmodels': {},
                              'debt_ebitda_regression_statsmodels': {}
                              }
+        self.points = {'market_cap': {},
+                             'debt': {},
+                             'assets': {},
+                             'revenue': {},
+                             'net_income': {},
+                             'p_e': {},
+                             'p_s': {},
+                             'p_bv': {},
+                             'ev_ebitda': {},
+                             'debt_ebitda': {}
+                             }
         criteria = ['market_cap', 'debt', 'assets', 'revenue',
                     'net_income', 'p_e', 'p_s', 'p_bv', 'ev_ebitda',
                     'debt_ebitda']
@@ -132,3 +222,14 @@ class Analyze:
                         self.calculations[stat_model_title][symbol] = self.regression_stat_model(data)
                         title = f"{key}_regression"
                         self.calculations[title][symbol] = self.regression(data)
+            for item in self.calculations.items():
+                title = item[0].replace("_regression", "")
+                self.points[title] = self.get_points(title, item[1])
+            total = {}
+            for symbol, values in self.data.items():
+                total[symbol] = 0
+                # for key, data in self.points.items():
+                    # for sym, point in data.items():
+                        # total[sym] = total[sym] + point
+            # self.points['total'] = total
+            print(self.points)
