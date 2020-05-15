@@ -111,9 +111,9 @@ def main(args):
                     scrapper.get_fundamental_analysis(symbol,
                                                       file_name)
             print(companies)
-            analysis_companies = analysis.Analyze(companies)
-            analysis_companies.calculate()
-            print(analysis_companies.calculations)
+            analysis_companies = analysis.Analyze(companies, app.symbols)
+            result = analysis_companies.calculate()
+            print(result)
 
     logger.info(args)
 
